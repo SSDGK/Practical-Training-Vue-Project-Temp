@@ -1,10 +1,10 @@
 <template>
-  <div id="app">
-    <h1>Welcome to My Vue App</h1>
-    <p>This is a simple Vue.js application.</p>
-  </div>
+  <ChatComponent />
 </template>
 
+<script setup>
+import ChatComponent from '@/components/ChatComponent.vue';
+</script>
 <style>
 #app {
   background-color:#000;
