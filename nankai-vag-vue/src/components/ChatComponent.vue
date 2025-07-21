@@ -200,6 +200,9 @@ export default {
 .single-message {
     display: flex;
     gap: 12px;
+    align-items: flex-start;
+    /* 保证内容顶部对齐 */
+    word-break: break-word; /* 自动换行 */
 }
 
 /* 用户消息反转图标和内容位置 */
@@ -261,6 +264,10 @@ export default {
     border-radius: 12px;
     line-height: 1.5;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    max-width: 100%; /* 限制最大宽度 */
+    word-break: break-word; /* 自动换行 */
+    white-space: pre-wrap;  /* 保留换行并自动换行 */
+    overflow-wrap: break-word; /* 长单词自动断行 */
 }
 
 /* 用户消息样式 - 保留渐变背景 */
