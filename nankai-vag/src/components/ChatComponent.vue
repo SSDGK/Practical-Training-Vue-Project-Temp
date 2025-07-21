@@ -88,7 +88,6 @@ export default {
             if (!this.inputMessage.trim()) return;
 
             this.messages.push({ "role": 'user', "model": this.curModel, "content": this.inputMessage });
-            this.inputMessage = '';
             this.waiting = true;
 
             try {
@@ -97,9 +96,10 @@ export default {
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({ "message": this.messages })
+                    body: JSON.stringify({ "user_query": this.inputMessage, "n_results" : 5, "llm_model": this.curModel })
                 });
 
+                this.inputMessage = '';
                 const aiMessage = {
                     role: 'assistant',
                     model: this.curModel,
@@ -119,13 +119,24 @@ export default {
 
                     const eventData = decoder.decode(value);
 
-                    // 直接更新最后一条消息内容
-                    this.messages[aiIndex].content += eventData;
-                    console.log(eventData)
+                    try {
+                        const data = JSON.parse(eventData);
+                        if (data.status !== 'success') {
+                            this.messages[aiIndex].content += '\n后台返回内容出错，请检查控制台' + data.message;
+                            break;
+                        }
+                        if (data.anwser) {
+                            // 更新当前消息内容
+                            this.messages[aiIndex].content += data.anwser;
+                        }
+                    } catch (e) {
+                        console.error('解析错误:', e, '数据:', eventData);
+                        this.messages[aiIndex].content += '\n后台返回内容出错，请检查控制台' + error.message;
+                        break;
+                    }
                     // 触发Vue的响应式更新
                     this.$forceUpdate();
                 }
-                this.waiting = false;
             } catch (error) {
                 console.error('请求失败:', error);
                 this.messages.push({
