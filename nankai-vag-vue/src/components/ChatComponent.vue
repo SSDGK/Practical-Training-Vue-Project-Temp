@@ -53,15 +53,15 @@ export default {
             messages: [],
             waiting_content: "加载中...",
             waiting: false,
-            curModel: 'Deepseek',
-            models: ['Deepseek', 'Chatgpt', '通义千问'],
+            curModel: 'deepseek-chat',
+            models: ['deepseek-chat', 'chat-gpt-3.5-turbo', 'qwen-chat'],
             previousModel: ''
         };
     },
     mounted() {
         this.previousModel = this.curModel;
     },
-        methods: {
+    methods: {
         whenChangeModel(event) {
             const newModel = event.target.value;
 
@@ -81,7 +81,8 @@ export default {
             return roleNames[role] || '未知角色';
         },
         renderMarkdown(wcontent) {
-            const rawHtml = marked(wcontent || '');
+            const withBr = (wcontent || '').replace(/\\n/g, '<br>');
+            const rawHtml = marked(withBr);
             return DOMPurify.sanitize(rawHtml);
         },
         async sendMessage() {
@@ -91,12 +92,12 @@ export default {
             this.waiting = true;
 
             try {
-                const response = await fetch('http://127.0.0.1:8000/message', {
+                const response = await fetch('http://127.0.0.1:8090/api/rag_answer_deepseek/', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({ "user_query": this.inputMessage, "n_results" : 5, "llm_model": this.curModel })
+                    body: JSON.stringify({ "user_query": this.inputMessage, "n_results": 5, "llm_model": this.curModel })
                 });
 
                 this.inputMessage = '';
@@ -108,34 +109,41 @@ export default {
                 this.messages.push(aiMessage);
                 const aiIndex = this.messages.length - 1;
 
-                // 流式处理
                 const reader = response.body.getReader();
                 const decoder = new TextDecoder();
+                let buffer = '';
 
-                // 在循环中逐步更新内容
                 while (true) {
                     const { done, value } = await reader.read();
                     if (done) break;
+                    buffer += decoder.decode(value);
 
-                    const eventData = decoder.decode(value);
+                    // 处理多行 SSE 数据
+                    const lines = buffer.split('\n\n');
+                    buffer = lines.pop(); // 剩下的部分留给下次
 
-                    try {
-                        const data = JSON.parse(eventData);
-                        if (data.status !== 'success') {
-                            this.messages[aiIndex].content += '\n后台返回内容出错，请检查控制台' + data.message;
-                            break;
+                    for (const line of lines) {
+                        // 解析 event 类型和 data
+                        const eventMatch = line.match(/^event:\s*(\w+)\ndata:\s*(.*)$/s);
+                        if (eventMatch) {
+                            const eventType = eventMatch[1];
+                            const eventData = eventMatch[2];
+
+                            if (eventType === 'docs') {
+                                console.log('文档数据:', eventData);
+                            } else if (eventType === 'metadatas') {
+                                console.log('文档位置:', eventData);
+                            } else if (eventType === 'user_query') {
+                                console.log('用户提问:', eventData);
+                            } else if (eventType === 'answer') {
+                                // 流式追加AI回复
+                                this.messages[aiIndex].content += eventData;
+                                this.$forceUpdate();
+                            } else {
+                                console.log('提示信息:', eventData);
+                            }
                         }
-                        if (data.anwser) {
-                            // 更新当前消息内容
-                            this.messages[aiIndex].content += data.anwser;
-                        }
-                    } catch (e) {
-                        console.error('解析错误:', e, '数据:', eventData);
-                        this.messages[aiIndex].content += '\n后台返回内容出错，请检查控制台' + error.message;
-                        break;
                     }
-                    // 触发Vue的响应式更新
-                    this.$forceUpdate();
                 }
             } catch (error) {
                 console.error('请求失败:', error);
@@ -202,7 +210,8 @@ export default {
     gap: 12px;
     align-items: flex-start;
     /* 保证内容顶部对齐 */
-    word-break: break-word; /* 自动换行 */
+    word-break: break-word;
+    /* 自动换行 */
 }
 
 /* 用户消息反转图标和内容位置 */
@@ -264,10 +273,12 @@ export default {
     border-radius: 12px;
     line-height: 1.5;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    max-width: 100%; /* 限制最大宽度 */
-    word-break: break-word; /* 自动换行 */
-    white-space: pre-wrap;  /* 保留换行并自动换行 */
-    overflow-wrap: break-word; /* 长单词自动断行 */
+    max-width: 100%;
+    /* 限制最大宽度 */
+    word-break: break-word;
+    /* 自动换行 */
+    overflow-wrap: break-word;
+    /* 长单词自动断行 */
 }
 
 /* 用户消息样式 - 保留渐变背景 */
