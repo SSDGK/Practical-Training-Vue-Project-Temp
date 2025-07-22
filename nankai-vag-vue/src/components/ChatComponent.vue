@@ -1,5 +1,11 @@
 <template>
     <div class="chat-container">
+        <div v-if="showAbout" class="about-modal">
+            <div class="about-modal-content">
+                <About />
+                <button class="about-close-btn" @click="showAbout = false">关闭</button>
+            </div>
+        </div>
         <div class="model-selector-container">
             <select id="model-selector" v-model="curModel" @change="whenChangeModel">
                 <option v-for="(model, index) in models" :value="model" :key="index">{{ model }}</option>
@@ -29,14 +35,12 @@
                     <div :class="['message', msg.role]" v-html="renderMarkdown(msg.content)"></div>
                 </div>
             </div>
-            <!-- <div v-if="waiting" class="message assistant">
-                {{ waiting_content }}
-            </div> -->
             <p>请开始你的对话~</p>
         </div>
         <div class="input-area">
             <input v-model="inputMessage" @keyup.enter="sendMessage" placeholder="输入消息..." />
             <button @click="sendMessage">发送</button>
+            <button class="about-close-btn" @click="showAbout = true">关于我们</button>
         </div>
     </div>
 </template>
@@ -45,8 +49,12 @@
 <script>
 import { marked } from 'marked';
 import DOMPurify from 'dompurify';
+import About from '@/components/view/About.vue';
 
 export default {
+    components: {
+        About
+    },
     data() {
         return {
             inputMessage: '',
@@ -55,7 +63,8 @@ export default {
             waiting: false,
             curModel: 'deepseek-chat',
             models: ['deepseek-chat', 'chat-gpt-3.5-turbo', 'qwen-chat'],
-            previousModel: ''
+            previousModel: '',
+            showAbout: true,
         };
     },
     mounted() {
@@ -483,5 +492,51 @@ button:active {
 #model-selector:disabled {
     opacity: 0.7;
     cursor: not-allowed;
+}
+
+/* About 弹窗遮罩和内容样式 */
+.about-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.25);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.about-modal>.about-close-btn {
+    margin-top: 24px;
+    padding: 8px 32px;
+    border: none;
+    border-radius: 20px;
+    background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+    color: #fff;
+    font-size: 16px;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(37, 117, 252, 0.15);
+    transition: background 0.2s;
+}
+
+.about-modal>.about-close-btn:hover {
+    background: linear-gradient(135deg, #2575fc 0%, #6a11cb 100%);
+}
+
+.about-modal-content {
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+    padding: 32px 36px;
+    max-width: 600px;
+    max-height: 600px;
+    width: 90vw;
+    text-align: center;
+    animation: fadeIn 0.3s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 </style>
