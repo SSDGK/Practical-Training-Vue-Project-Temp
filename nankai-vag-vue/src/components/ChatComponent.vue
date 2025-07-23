@@ -7,6 +7,7 @@
             </div>
         </div>
         <div class="model-selector-container">
+            <RouterLink to="/" class="logout-btn">登出</RouterLink>
             <select id="model-selector" v-model="curModel" @change="whenChangeModel">
                 <option v-for="(model, index) in models" :value="model" :key="index">{{ model }}</option>
             </select>
@@ -50,6 +51,7 @@
 import { marked } from 'marked';
 import DOMPurify from 'dompurify';
 import About from '@/components/view/About.vue';
+import { RouterLink } from 'vue-router'
 
 export default {
     components: {
@@ -170,23 +172,6 @@ export default {
 </script>
 
 <style>
-#app {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-
-    width: 100%;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    height: 800vh;
-    display: flex;
-    justify-content: center;
-    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-    padding: 20px;
-    box-sizing: border-box;
-}
-
 /* 固定宽度的聊天容器 */
 .chat-container {
     width: 100%;
@@ -439,6 +424,28 @@ button:active {
     position: relative;
     max-width: 300px;
     margin: 1rem auto;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.logout-btn {
+    padding: 8px 20px;
+    background: linear-gradient(135deg, #ff5858 0%, #f09819 100%);
+    color: #fff;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: bold;
+    border: none;
+    transition: background 0.2s;
+    cursor: pointer;
+    font-size: 1rem;
+    margin-right: 8px;
+    display: inline-block;
+    align-items: left;
+}
+.logout-btn:hover {
+    background: linear-gradient(135deg, #f09819 0%, #ff5858 100%);
 }
 
 #model-selector {
@@ -528,7 +535,7 @@ button:active {
 .about-modal-content {
     background: #fff;
     border-radius: 16px;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
     padding: 32px 36px;
     max-width: 600px;
     max-height: 600px;
