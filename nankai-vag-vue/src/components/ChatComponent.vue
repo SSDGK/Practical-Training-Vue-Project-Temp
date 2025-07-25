@@ -94,6 +94,7 @@ export default {
         renderMarkdown(wcontent) {
             const withBr = (wcontent || '').replace(/\\n/g, '<br>');
             const rawHtml = marked(withBr);
+            rawHtml = rawHtml.replace(/<a /g, '<a target="_blank" ');
             return DOMPurify.sanitize(rawHtml);
         },
         async sendMessage() {
